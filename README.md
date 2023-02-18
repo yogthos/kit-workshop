@@ -332,7 +332,7 @@ Let's drop the `:test` and `:dev` profile, and instead use a `:default` profile 
 
 Now let's run
 
-   (reset)
+    (reset)
 
 And we should be connected to our database. Let's check that by running
 
