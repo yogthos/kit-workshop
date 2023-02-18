@@ -12,6 +12,8 @@
   * [Starting the REPL](#starting-the-repl)
   * [Using Modules](#using-modules)
   * [CHECKPOINT 1](#checkpoint-1)
+  * [What are Modules](#what-are-modules)
+  * [Adding a Database](#adding-a-database)
 
 ## Prerequisites
 
@@ -224,3 +226,76 @@ Let's navigate to `http://localhost:3000/api/health` and see if we have some hea
 At this point you should have your project setup, are able to run and connect to the REPL, and run the web server successfully.
 
 [Click here to continue on to Checkpoint 2](https://github.com/nikolap/kit-workshop/tree/checkpoint-2)
+
+### What are Modules
+
+By now we've synced modules, but what are they? Kit modules consist of templates that can be used to inject code and resources into a Kit project.
+
+By default, we have the public Kit modules repository linked under the `:modules` key of your `kit.edn` configuration of your project.
+
+```clojure
+{:root         "modules"
+ :repositories [{:url  "https://github.com/kit-clj/modules.git"
+                 :tag  "master"
+                 :name "kit-modules"}]}
+```
+
+This configuration says to pull Kit modules template from the repository `https://github.com/kit-clj/modules.git` on the branch `master`.
+
+This means that it is possible to extend this configuration with private or public modules that you write yourself. We won't be covering this during the workshop, but feel free to give it a try afterwards.
+
+Now, let's use Modules to connect to a database.
+
+### Adding a Database
+
+Let's remind ourselves what modules we can install via `(kit/list-modules)`.
+
+You'll notice there is `:kit/sql` module with various **profiles**. Some modules have variants that can be chosen from when installing. To use a non-default variant simply specify the profile as the second argument when running `kit/install-module`.
+
+Now let's do this to set up PostgreSQL with our project:
+
+    (kit/install-module :kit/sql :postgres)
+
+You should see something like this in your REPL output
+
+```clojure
+:kit/sql requires following modules: nil
+applying features to config: [:base :sqlite]
+updating file: resources/system.edn
+updating file: deps.edn
+updating file: src/clj/io/github/kit/gif2html/core.clj
+applying
+ action: :append-requires 
+ value: ["[kit.edge.db.sql.conman]" "[kit.edge.db.sql.migratus]"]
+:kit/sql installed successfully!
+restart required!
+:done
+```
+
+Let's quickly add a `docker-compose.yml`. You can copy this over in to the root of the project:
+
+```yml
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example_password
+      POSTGRES_USER: example_user
+      POSTGRES_DB: example_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
+```
+
+We can start this up by running
+
+    docker compose up -d
+
+This will start the services defined in our `docker-compose.yml` file in detached mode. For more about docker, you can read up on it here.
