@@ -15,6 +15,9 @@
   * [What are Modules](#what-are-modules)
   * [Adding a Database](#adding-a-database)
   * [CHECKPOINT 2](#checkpoint-2)
+  * [Managing the Database](#managing-the-database)
+  * [Querying the Database](#querying-the-database)
+  * [CHECKPOINT 3](#checkpoint-3)
 
 ## Prerequisites
 
@@ -351,3 +354,132 @@ Don't worry, these commands will be explained shortly.
 At this point you should have your database up and running, and your server should be able to connect to it.
 
 [Click here to continue on to Checkpoint 3](https://github.com/nikolap/kit-workshop/tree/checkpoint-3)
+
+### Managing the Database
+
+Database migrations are a way to manage changes to a database schema while preserving existing data. They are useful because they allow developers to evolve the database schema over time, track and test changes, and collaborate more effectively.
+
+We can create and execute migrations thanks to [Migratus](https://github.com/yogthos/migratus). Let's create our first migration in the REPL!
+
+```clojure
+(migratus.core/create
+  (:db.sql/migrations state/system)
+  "create-gif-tables")
+```
+
+Here Migratus created for us two files, `20230218160207-create-gif-tables.up.sql` and `20230218160207-create-gif-tables.down.sql`.
+
+The name is identical except for the suffix at the end, `.up.sql` or `.down.sql`. This allows us to express and **up** migration and a **down** migration. The benefit here is if ever you need to revert a migration you can specify the steps to do so.
+
+Let's write our first migration now. What are some database columns you think might be needed for this service? 
+
+Here's the one we came up with
+
+```sql
+create table if not exists gifs
+(
+    id         serial primary key,
+    html       text                      not null,
+    name       text                      not null,
+    created_at timestamptz default now() not null
+);
+```
+
+Let's also write a down migration. To revert, we'll simply drop the table if it exists
+
+```sql
+drop table if exists gifs;
+```
+
+Now that we have our SQL migrations written out, let's try to execute them with Migratus in our REPL.
+
+    (migratus.core/migrate (:db.sql/migrations state/system))
+
+Now if we try that command from before to get our columns from the new `gifs` table, we should see this:
+
+```clojure
+clj꞉user꞉>(jdbc/execute!
+  (:db.sql/connection state/system)
+  ["select column_name from information_schema.columns where table_name = 'gifs';"])
+[#:columns{:column_name "id"}
+ #:columns{:column_name "created_at"}
+ #:columns{:column_name "html"}
+ #:columns{:column_name "name"}]
+```
+
+For the sake of practice, let's also roll back our migration.
+
+    (migratus.core/rollback (:db.sql/migrations state/system))
+
+Now querying for the table columns should return an empty array, `[]`.
+
+If you ever need to completely roll back all migrations, you can run
+
+    (migratus.core/reset (:db.sql/migrations state/system))
+
+We can also run migrations by simply `(reset)`ing the system, since our `system.edn` has configured migrations to run on startup.
+
+Now we have our initial database schema set up. Next up, we should write some queries for them.
+
+### Querying the Database
+
+For starters we'll create some simple queries to write and read from our database. We're using HugSQL for writing queries. There's some syntactic sugar we should be aware of, for full docs go to the [HugSQL](https://www.hugsql.org/getting-started) documentation. We'll go over a few below.
+
+```sql
+-- :name create-gif! :<!
+-- :doc inserts and returns a gif
+insert into gifs(html, name)
+values (:html, :name)
+returning *;
+
+-- :name get-gif-by-id :? :1
+-- :doc gets a single gif given its ID
+select *
+from gifs
+where id = :id;
+
+-- :name list-gifs
+-- :doc lists all gifs
+select *
+from gifs;
+```
+
+Let's `(reset)` again and try out our queries in the REPL.
+
+First, let's create an entry. We can create a gif by querying `:create-gif!` and giving it a map with two keys, `:html` and `:name`. 
+
+```clojure
+clj꞉user꞉>((:db.sql/query-fn state/system)
+  :create-gif! {:html "test html" :name "test name"})
+[{:id 1, :html "test html", :name "test name", :created_at #inst"2023-02-18T16:25:05.857508000-00:00"}]
+```
+
+We can get that gif by querying for its ID in a similar fashion.
+
+```clojure
+clj꞉user꞉>((:db.sql/query-fn state/system) :get-gif-by-id {:id 1})
+{:id 1, :html "test html", :name "test name", :created_at #inst"2023-02-18T16:25:05.857508000-00:00"}
+```
+
+And to list all of them we can query with an empty parameter map. Note this argument is required, so even if your query doesn't have any arguments you will need to provide `{}`.
+
+```clojure
+clj꞉user꞉>((:db.sql/query-fn state/system) :list-gifs {})
+[{:id 1, :html "test html", :name "test name", :created_at #inst"2023-02-18T16:25:05.857508000-00:00"}]
+```
+
+We've been using the `(:db.sql/query-fn state/system)` function quite often for testing. Why not add it to our `user.clj` namespace. Since this component is only available when the system is started, we can either define it in a function, or have it in our rich comment block at the end. We'll do the latter in this example.
+
+```clojure
+(comment
+  (go)
+  (reset)
+  (def query-fn (:db.sql/query-fn state/system)))
+```
+
+### CHECKPOINT 3
+
+At this point you should have a `gifs` table in your database, queries written for it, and able to read and write from the REPL.
+
+[Click here to continue on to Checkpoint 4](https://github.com/nikolap/kit-workshop/tree/checkpoint-4)
+
