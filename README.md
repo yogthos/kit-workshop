@@ -336,7 +336,7 @@ Now let's run
 
 And we should be connected to our database. Let's check that by running
 
-```
+```clojure
 (require '[next.jdbc :as jdbc])
 (jdbc/execute! 
   (:db.sql/connection state/system)
