@@ -3,7 +3,6 @@ version: '3.9'
 services:
   db:
     image: postgres:15-alpine
-    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: gif2html
       POSTGRES_USER: gif2html
