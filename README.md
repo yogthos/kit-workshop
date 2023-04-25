@@ -186,7 +186,7 @@ If everything went well then you should see the following prompt:
 ;   - `alt+up` and `alt+down` traverse up and down the REPL command history
 ;      when the cursor is after the last contents at the prompt
 ;   - Clojure lines in stack traces are peekable and clickable.
-clj꞉user꞉> 
+clj꞉user꞉> 
 ```
 
 ### Using Modules
@@ -194,14 +194,14 @@ clj꞉user꞉> 
 We'll need to pull the modules from the remote repository. This is accomplished by running the following commmand in the REPL:
 
 ```clojure
-clj꞉user꞉> (kit/sync-modules)
+clj꞉user꞉> (kit/sync-modules)
 :done
 ```
 If the command ran successfully then you should see a new `modules` folder in the project containing the modules that were downloaded and are now available for use.
 Let's list the available modules:
 
 ```clojure
-clj꞉user꞉> (kit/list-modules)
+clj꞉user꞉> (kit/list-modules)
 :kit/html - adds support for HTML templating using Selmer
 :kit/htmx - adds support for HTMX using hiccup
 :kit/ctmx - adds support for HTMX using CTMX
@@ -216,7 +216,7 @@ clj꞉user꞉> (kit/list-modules)
 Finallly, let's try starting the server to make sure our application is working.
 
 ```clojure
-clj꞉user꞉> (go)
+clj꞉user꞉> (go)
 :initiated
 ```
 Let's navigate to `http://localhost:3000/api/health` and see if we have some health check information returned by the server:
@@ -263,7 +263,7 @@ Now let's do this to set up PostgreSQL with our project:
 You should see something like this in your REPL output
 
 ```clojure
-clj꞉user꞉> (kit/install-module :kit/sql {:feature-flag :postgres})
+clj꞉user꞉> (kit/install-module :kit/sql {:feature-flag :postgres})
 :kit/sql requires following modules: nil
 applying features to config: [:base]
 updating file: resources/system.edn
@@ -324,9 +324,9 @@ Our `system.edn` was changed to define the Database we'll be using. Here we have
 - `:db.sql/query-fn`: The HugSQL queries defined in your `resources/sql/queries.sql` can be used with this function
 - `:db.sql/migrations`: The configuration for Migratus.
 
-Lastly, before we try running our system again, let's change our `:db.sql/connection` connection string in `system.edn`. 
+Lastly, before we try running our system again, let's change our `:db.sql/connection` connection string in `system.edn`.
 
-Here we have three different profiles. For sake of simplicity, we can use the same DB connection for `test` and `dev`. 
+Here we have three different profiles. For sake of simplicity, we can use the same DB connection for `test` and `dev`.
 
 Let's drop the `:test` and `:dev` profile, and instead use a `:default` profile with the following value.
 
@@ -371,7 +371,7 @@ Here Migratus created for us two files, `20230218160207-create-gif-tables.up.sql
 
 The name is identical except for the suffix at the end, `.up.sql` or `.down.sql`. This allows us to express and **up** migration and a **down** migration. The benefit here is if ever you need to revert a migration you can specify the steps to do so.
 
-Let's write our first migration now. What are some database columns you think might be needed for this service? 
+Let's write our first migration now. What are some database columns you think might be needed for this service?
 
 Here's the one we came up with
 
@@ -428,8 +428,8 @@ For starters we'll create some simple queries to write and read from our databas
 ```sql
 -- :name create-gif! :<!
 -- :doc inserts and returns a gif
-insert into gifs(html, name)
-values (:html, :name)
+insert into gifs(link, name)
+values (:link, :name)
 returning *;
 
 -- :name get-gif-by-id :? :1
@@ -446,26 +446,26 @@ from gifs;
 
 Let's `(reset)` again and try out our queries in the REPL.
 
-First, let's create an entry. We can create a gif by querying `:create-gif!` and giving it a map with two keys, `:html` and `:name`. 
+First, let's create an entry. We can create a gif by querying `:create-gif!` and giving it a map with two keys, `:link` and `:name`.
 
 ```clojure
 clj꞉user꞉>((:db.sql/query-fn state/system)
-  :create-gif! {:html "test html" :name "test name"})
-[{:id 1, :html "test html", :name "test name", :created_at #inst"2023-02-18T16:25:05.857508000-00:00"}]
+  :create-gif! {:link "test html" :name "test name"})
+[{:id 1, :link "test html", :name "test name", :created_at #inst"2023-02-18T16:25:05.857508000-00:00"}]
 ```
 
 We can get that gif by querying for its ID in a similar fashion.
 
 ```clojure
 clj꞉user꞉>((:db.sql/query-fn state/system) :get-gif-by-id {:id 1})
-{:id 1, :html "test html", :name "test name", :created_at #inst"2023-02-18T16:25:05.857508000-00:00"}
+{:id 1, :link "test html", :name "test name", :created_at #inst"2023-02-18T16:25:05.857508000-00:00"}
 ```
 
 And to list all of them we can query with an empty parameter map. Note this argument is required, so even if your query doesn't have any arguments you will need to provide `{}`.
 
 ```clojure
 clj꞉user꞉>((:db.sql/query-fn state/system) :list-gifs {})
-[{:id 1, :html "test html", :name "test name", :created_at #inst"2023-02-18T16:25:05.857508000-00:00"}]
+[{:id 1, :link "test html", :name "test name", :created_at #inst"2023-02-18T16:25:05.857508000-00:00"}]
 ```
 
 We've been using the `(:db.sql/query-fn state/system)` function quite often for testing. Why not add it to our `user.clj` namespace. Since this component is only available when the system is started, we can either define it in a function, or have it in our rich comment block at the end. We'll do the latter in this example.
@@ -482,4 +482,3 @@ We've been using the `(:db.sql/query-fn state/system)` function quite often for 
 At this point you should have a `gifs` table in your database, queries written for it, and able to read and write from the REPL.
 
 [Click here to continue on to Checkpoint 4](https://github.com/nikolap/kit-workshop/tree/checkpoint-4)
-
