@@ -389,7 +389,18 @@ Let's add one more dependency in `deps.edn`:
 io.github.kit-clj/kit-postgres {:mvn/version "1.0.3"}
 ```
  
- This library contains extensions for JDBC to store data structures such as EDN as JSON in PostgreSQL. We can refer it in `core.clj` by adding `[kit.edge.db.postgres]` to the `requires` vector. Let's restart the REPL to make sure the changes take effect.
+ This library contains extensions for JDBC to store data structures such as EDN as JSON in PostgreSQL. Now we'll need to update our `core.clj` namespace to reference the library. To do that, let's update the `:require` section of the namespace to add the following:
+
+ ```clojure
+(ns io.github.kit.gif2html.core
+  (:require
+    ...
+    ;; reference to Kit Postgres adapter
+    [kit.edge.db.postgres])
+  (:gen-class))
+```
+
+Finally, let's restart the REPL to make sure the changes take effect.
 
 Don't worry, these commands will be explained shortly.
 
