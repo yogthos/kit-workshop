@@ -1312,3 +1312,14 @@ bb ui.clj
 ```
 
 You can now navigate to `http://localhost:3001/` and try out the service you built from the page.
+
+Let's try adding another GIF to the database in the Swagger UI
+
+```javascript
+{
+  "link": "https://media.tenor.com/lTtlX5xlfmgAAAAC/nyan-cat.gif",
+  "name": "nyan-cat"
+}
+```
+
+Once you reload the client page, then you should see the new GIF animation playing.
