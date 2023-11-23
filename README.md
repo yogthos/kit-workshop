@@ -1095,11 +1095,14 @@ With that out of the way, let's try converting the test code from the REPL into 
       (is (nat-int? (:id body))))))
 ```
 
-The test will save a GIF animation in the db, confirm that the return status is HTTP success, and check that the body contains the `id` that is a number. We can run the test in the REPL the way we'd run a regualr function: `test-parsing-and-loading-gif`. We can also execute all the tests in the namespace as follows:
+The test will save a GIF animation in the db, confirm that the return status is HTTP success, and check that the body contains the `id` that is a number. We can run the tests in the terminal as follows:
 
-```clojure
-(run-tests)
-=> {:test 1, :pass 2, :fail 0, :error 0, :type :summary}
+```shell
+clj -M:test
+...
+Ran 1 tests containing 5 assertions.
+0 failures, 0 errors.
+...
 ```
 
 Let's update our test to check that we can retrieve the animation:
