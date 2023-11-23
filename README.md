@@ -1222,7 +1222,7 @@ Finally, we'll update our `system-fixture` to reset the test database state befo
     (clear-db-and-rerun-migrations)
     (f)))
 ```
-We can test that everything still works by running `(run-tests)` again from the `io.github.kit.gif2html.test-utils` namespace.
+We can test that everything still works by running `clj -M:test` again from the terminal.
 
 What we did works fine when we have a single fixture, but in many cases we may want to compose multiple fixtures together. We can use `clojure.test/join-fixtures function to do that. Let's see how we can refactor the code above to use multiple fixtures.
 
