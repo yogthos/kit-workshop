@@ -291,7 +291,6 @@ Now let's do this to set up PostgreSQL with our project:
 You should see something like this in your REPL output
 
 ```clojure
-clj꞉user꞉> (kit/install-module :kit/sql {:feature-flag :postgres})
 :kit/sql requires following modules: nil
 applying features to config: [:base]
 updating file: resources/system.edn
