@@ -31,3 +31,10 @@
 
 (defn get-gif-by-id [{:keys [query-fn] :as opts} {{params :path} :parameters}]
   (http-response/ok (query-fn :get-gif-by-id params)))
+
+(comment
+  (save-gif (user/api-ctx) {:parameters {:body {:link "https://media.tenor.com/JMzBeLgNaSoAAAAj/banana-dance.gif" :name "foo"}}})
+  (->> (list-gifs (user/api-ctx) nil)
+       :body
+       (map #(select-keys % [:name :id])))
+  (get-gif-by-id (user/api-ctx) {:parameters {:path {:id 3}}}))
