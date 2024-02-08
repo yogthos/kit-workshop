@@ -4,7 +4,7 @@
    [io.github.kit.gif2html.web.controllers.gifs :as gifs]
    [clojure.test :refer :all]))
 
-(use-fixtures :once (utils/system-fixture))
+(use-fixtures :once utils/test-fixtures)
 
 (defn test-ctx
   []
