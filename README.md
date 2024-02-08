@@ -1095,14 +1095,20 @@ With that out of the way, let's try converting the test code from the REPL into 
       (is (nat-int? (:id body))))))
 ```
 
-The test will save a GIF animation in the db, confirm that the return status is HTTP success, and check that the body contains the `id` that is a number. We can run the tests in the terminal as follows:
+We can try running the test from the REPL by issuing the following command:
 
-```shell
-clj -M:test
-...
-Ran 1 tests containing 5 assertions.
+```clojure
+(run-tests)
+```
+
+We should see the following output if everything went well:
+
+```clojure
+Testing io.github.kit.gif2html.core-test
+
+Ran 1 tests containing 2 assertions.
 0 failures, 0 errors.
-...
+{:test 1, :pass 2, :fail 0, :error 0, :type :summary}
 ```
 
 Let's update our test to check that we can retrieve the animation:
@@ -1137,9 +1143,15 @@ Finally, let's add the test for listing the animations:
         (is (-> (gifs/list-gifs (test-ctx) {}) :body vector?))))))
 ```
 
+We now have a reasonable test for the functionality of our app that will attempt to save an animation, try to retreive it by id, and grab all the animations in the db.
+
+### SECTION 7
+
 ### Setting up a test DB
 
-Up to now our tests have been running on our development DB. This can be solved by either setting up rollbacks in the context of transactions, or provisioning a separate test database. For our purposes we will set up a test database.
+Up to now our tests have been running on our development DB. This isn't desirable since we will affect the state of the the database when we interact with the app via the REPL. Ideally, we want to have a predictable state of the databse each time we run our tests.
+
+This can be solved by either setting up rollbacks in the context of transactions, or provisioning a separate test database. For our purposes we will set up a test database.
 
 Let's extend our `docker-compose.yml` to include a test database. Note the changed DB port and additional volume:
 
@@ -1177,9 +1189,10 @@ And also update our `system.edn` to use this new database for test, and keep the
 
 ```clojure
 :db.sql/connection #profile {:dev  {:jdbc-url "jdbc:postgresql://localhost:5432/gif2html?user=gif2html&password=gif2html"}
-                              :test {:jdbc-url "jdbc:postgresql://localhost:5442/gif2html?user=gif2html&password=gif2html"}
-                              :prod {:jdbc-url #env JDBC_URL}}
+                             :test {:jdbc-url "jdbc:postgresql://localhost:5442/gif2html?user=gif2html&password=gif2html"}
+                             :prod {:jdbc-url #env JDBC_URL}}
 ```
+As you can see, we'll now have separate strategies for loading `:jdbc-url` configuration value depending on the environment that the application runs in.
 
 We can test this works by running `docker compose up -d` again in our shell. When we re-run our tests we should see some data populated in the test database.
 
@@ -1222,9 +1235,39 @@ Finally, we'll update our `system-fixture` to reset the test database state befo
     (clear-db-and-rerun-migrations)
     (f)))
 ```
-We can test that everything still works by running `clj -M:test` again from the terminal.
 
-What we did works fine when we have a single fixture, but in many cases we may want to compose multiple fixtures together. We can use `clojure.test/join-fixtures function to do that. Let's see how we can refactor the code above to use multiple fixtures.
+With the following updates we'll be able to run our tests indepdently of our app in development mode. Let's go to the terminal and try running the tests from command line.
+
+Note that the tests will start all the components when the system is started. This means that the HTTP server will also be loaded, and we already have an instance of the server running on the default port.
+
+One way we could resolve that would be by adding profile similarly to the way we did with the `:jdbc-url` earlier. However, to save time, let's just define an environment variable for a different port instead.
+
+```shell
+export PORT=3001
+```
+
+We can now execute our tests by running the following command from the terminal:
+
+```shell
+clj -M:test
+```
+
+The output should look something like the following:
+
+```shell
+...
+2024-02-07 19:34:05,060 [main] DEBUG migratus.migration.sql - found 1 up migrations
+2024-02-07 19:34:05,061 [main] DEBUG migratus.database - marking 20231221225949 complete
+2024-02-07 19:34:05,063 [main] INFO  migratus.core - Ending migrations
+
+Ran 1 tests containing 5 assertions.
+0 failures, 0 errors.
+2024-02-07 19:34:05,703 [Thread-1] INFO  io.github.kit.gif2html.env -
+-=[io.github.kit.gif2html has shut down successfully]=-
+2024-02-07 19:34:05,709 [Thread-1] INFO  kit.edge.server.undertow - HTTP server stopped
+```
+
+What we did works fine when we have a single fixture, but in many cases we may want to compose multiple fixtures together. We can use `clojure.test/join-fixtures` function to do that. Let's see how we can refactor the code above to use multiple fixtures.
 
 First, let's add a new require to the
 
@@ -1278,13 +1321,13 @@ One last thing we'll have to do is to update `use-fixtures` in the `io.github.ki
 (use-fixtures :once utils/test-fixtures)
 ```
 
-Now that we have this running in our REPL, let's stop our server and try running our tests from the command line:
+Let's try running our tests again to make sure everything works as exepcted:
 
 ```shell
 clojure -M:test
 ```
 
-### SECTION 7
+### SECTION 8
 
 [Click here to see the solution to the previous section](https://github.com/yogthos/kit-workshop/tree/checkpoint-6)
 
