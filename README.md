@@ -36,6 +36,7 @@
     - [SECTION 6](#section-6)
     - [Testing with the REPL](#testing-with-the-repl)
     - [SECTION 7](#section-7)
+    - [SECTION 8](#section-8)
 
 ## Prerequisites
 
